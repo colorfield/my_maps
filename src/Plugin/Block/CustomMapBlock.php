@@ -5,6 +5,7 @@ namespace Drupal\my_maps\Plugin\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeManager;
 
@@ -24,6 +25,7 @@ class CustomMapBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * @var \Drupal\Core\Entity\EntityTypeManager
    */
   protected $entityTypeManager;
+
   /**
    * Construct.
    *
@@ -34,25 +36,16 @@ class CustomMapBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * @param string $plugin_definition
    *   The plugin implementation definition.
    */
-  public function __construct(
-        array $configuration,
-        $plugin_id,
-        $plugin_definition,
-        EntityTypeManager $entity_type_manager
-  ) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManager $entity_type_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
   }
+
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager')
-    );
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.manager'));
   }
 
   /**
@@ -60,10 +53,10 @@ class CustomMapBlock extends BlockBase implements ContainerFactoryPluginInterfac
    */
   public function defaultConfiguration() {
     return [
-         'description' => $this->t('My custom map'),
-        ] + parent::defaultConfiguration();
+      'description' => $this->t('My custom map'),
+    ] + parent::defaultConfiguration();
 
- }
+  }
 
   /**
    * {@inheritdoc}
@@ -90,33 +83,30 @@ class CustomMapBlock extends BlockBase implements ContainerFactoryPluginInterfac
   }
 
   /**
-   * Returns a single Geofield value for the current node.
-   */
-  private function getGeofieldValue() {
-    $result = null;
-    $node = \Drupal::routeMatch()->getParameter('node');
-    if ($node) {
-      $result = $node->get('field_geofield')->getValue()[0];
-    }
-    return $result;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function build() {
-    $build = [
-      '#theme' => 'my_maps',
-      '#description' => $this->configuration['description'],
-      '#attached' => array(
-        'library' => array(
-          'my_maps/custom_map',
+    $build = [];
+
+    // Get the current node object
+    $node = \Drupal::routeMatch()->getParameter('node');
+    if ($node instanceof Node) {
+      $build = [
+        '#theme' => 'my_maps',
+        '#description' => $this->configuration['description'],
+        '#attached' => array(
+          'library' => array(
+            'my_maps/custom_map',
+          ),
+          'drupalSettings' => array(
+            // Return the first Geofield value
+            'geofield' => $node->get('field_geofield')->getValue()[0],
+            'title' => $node->getTitle(),
+          ),
         ),
-        'drupalSettings' => array(
-          'geofield' => $this->getGeofieldValue(),
-        ),
-      ),
-    ];
+      ];
+    }
+
     return $build;
   }
 
