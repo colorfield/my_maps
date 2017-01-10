@@ -29,6 +29,9 @@ function my_maps_help($route_name, RouteMatchInterface $route_match) {
 function my_maps_theme() {
   return [
     'my_maps' => [
+      'variables' => [
+        'description' => null,
+      ],
       'template' => 'my_maps',
       'render element' => 'children',
     ],

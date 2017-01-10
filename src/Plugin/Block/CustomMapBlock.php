@@ -60,7 +60,7 @@ class CustomMapBlock extends BlockBase implements ContainerFactoryPluginInterfac
    */
   public function defaultConfiguration() {
     return [
-         'title' => $this->t('My custom map'),
+         'description' => $this->t('My custom map'),
         ] + parent::defaultConfiguration();
 
  }
@@ -69,11 +69,11 @@ class CustomMapBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function blockForm($form, FormStateInterface $form_state) {
-    $form['title'] = [
+    $form['description'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Title'),
-      '#description' => $this->t(''),
-      '#default_value' => $this->configuration['title'],
+      '#title' => $this->t('Description'),
+      '#description' => '',
+      '#default_value' => $this->configuration['description'],
       '#maxlength' => 64,
       '#size' => 64,
       '#weight' => '0',
@@ -86,16 +86,37 @@ class CustomMapBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
-    $this->configuration['title'] = $form_state->getValue('title');
+    $this->configuration['description'] = $form_state->getValue('description');
+  }
+
+  /**
+   * Returns a single Geofield value for the current node.
+   */
+  private function getGeofieldValue() {
+    $result = null;
+    $node = \Drupal::routeMatch()->getParameter('node');
+    if ($node) {
+      $result = $node->get('field_geofield')->getValue()[0];
+    }
+    return $result;
   }
 
   /**
    * {@inheritdoc}
    */
   public function build() {
-    $build = [];
-    $build['custom_map_block_title']['#markup'] = '<p>' . $this->configuration['title'] . '</p>';
-
+    $build = [
+      '#theme' => 'my_maps',
+      '#description' => $this->configuration['description'],
+      '#attached' => array(
+        'library' => array(
+          'my_maps/custom_map',
+        ),
+        'drupalSettings' => array(
+          'geofield' => $this->getGeofieldValue(),
+        ),
+      ),
+    ];
     return $build;
   }
 
