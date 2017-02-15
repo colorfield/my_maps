@@ -4,6 +4,8 @@
  */
 
 (function ($, Drupal) {
+    
+    const mapElement = 'my-map';
 
     /**
      * Initializes the map.
@@ -12,7 +14,7 @@
         //console.log(geofield);
         var point = {lat: geofield.lat, lng: geofield.lon};
 
-        var map = new google.maps.Map(document.getElementById('my-map'), {
+        var map = new google.maps.Map(document.getElementById(mapElement), {
             center: point,
             scrollwheel: false,
             zoom: 12
@@ -34,7 +36,9 @@
 
     Drupal.behaviors.customMapBehavior = {
         attach: function (context, settings) {
-            init(settings.geofield, settings.title);
+            $(context).find('#'+mapElement).once('customMapBehavior').each(function () {
+                init(settings.geofield, settings.title);
+            });
         }
     };
 
